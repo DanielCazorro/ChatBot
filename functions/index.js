@@ -6,6 +6,8 @@ const express = require('express');
 const bodyParser = require('body-parser'); // necesario para leer HTTP Post y almacenar en req.body (middelware module)
 const path = require('path');
 
+const DBVDialogLib = require('./DBVDialogLib')
+
 // Variables Globales
 // Guia de uso de Express https://expressjs.com/es/guide/routing.html
 const server = express();
@@ -14,7 +16,7 @@ server.use(bodyParser.urlencoded({
 }));
 server.use(bodyParser.json()); // para analizar json
 //server.use("/imagenes",express.static(__dirname+'/imagenes')); // para poder cargar las imágenes de la carpeta
-server.use("/imagenes", express.static(path.join(__dirname + '/imagenes')));
+server.use("/imagenes", express.static(path.join(__dirname, '/imagenes')));
 
 server.get('/', (req, res) => {
     return res.json("Hola, soy un bot, pero esta no es la forma de interactuar conmigo");
