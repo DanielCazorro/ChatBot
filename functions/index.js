@@ -1,44 +1,52 @@
 'use strict'
 
-// Importar librerias
-const functions = require("firebase-functions");
+const functions = require('firebase-functions');
 const express = require('express');
-const bodyParser = require('body-parser');
+// https://www.npmjs.com/package/body-parser
+const bodyParser = require('body-parser'); // necesario para leer HTTP Post y almacenar en req.body (middelware module)
 const path = require('path');
 
 // Variables Globales
+// Guia de uso de Express https://expressjs.com/es/guide/routing.html
 const server = express();
 server.use(bodyParser.urlencoded({
     extended: true
 }));
-server.use(bodyParser.json()); //para analizar json
-// para cargar imágenes
+server.use(bodyParser.json()); // para analizar json
+//server.use("/imagenes",express.static(__dirname+'/imagenes')); // para poder cargar las imágenes de la carpeta
 server.use("/imagenes", express.static(path.join(__dirname + '/imagenes')));
 
-//  si alguien intenta acceder desde un navegador
 server.get('/', (req, res) => {
-    return res.json("Hola, soy un bot, pero esta no es la forma correcta de interactura conmigo")
+    return res.json("Hola, soy un bot, pero esta no es la forma de interactuar conmigo");
 })
-// Acceso correcto
+
 server.post("/curso", (req, res) => {
-    let resultado = `recibida petición post correcta`;
+    let contexto = "nada";
+    let resultado = "petición incorrecta";
+    try {
+        contexto = req.body.queryResult.action;
+        resultado = `recibida petición de ${contexto}`;
+    } catch (error) {
+        console.log("Error contexto vacio:" + error);
+    }
     res.json(resultado);
+    if (req.body.queryResult.parameters) {
+        console.log("parámetros:" + req.body.queryResult.parameters);
+    } else {
+        console.log("Sin parámetros");
+
+    }
+
+
 });
 
-const local = true; // para ejecutar servidor en local
+
+const local = true;
 if (local) {
     server.listen((process.env.PORT || 8000), () => {
-        console.log("Servidor funcionando");
-    });
+        console.log("Servidor funcionando...");
+
+    })
 } else {
-    // Para firebase
     exports.curso1 = functions.https.onRequest(server);
 }
-
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
-
-exports.helloWorld = functions.https.onRequest((request, response) => {
-    functions.logger.info("Hello logs!", { structuredData: true });
-    response.send("!Hola Pilotos!");
-});
