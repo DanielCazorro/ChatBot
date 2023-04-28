@@ -42,6 +42,28 @@ function addSugerencias(res, opciones) {
         }
     });
 }
+function addCard(res,titulo,texto,imagen,url) {
+    res.fulfillmentMessages.push({
+        "platform": "ACTIONS_ON_GOOGLE",
+        "basicCard": {
+            "title": titulo,
+            "subtitle": titulo,
+            "formattedText": texto,
+            "image": {
+                "imageUri": imagen,
+                "accessibilityText": titulo
+            },
+            "buttons": [
+                {
+                    "title": `Más info. ${titulo}`,
+                    "openUriAction": {
+                        "uri": url
+                    }
+                }
+            ]
+        }
+    });
+}
 /**
  * 
  * @param {*} opciones recibe la lista de opciones
@@ -62,5 +84,6 @@ function hola(nombre) {
 module.exports = {
     hola: hola,
     respuestaBasica: respuestaBasica,
-    addSugerencias: addSugerencias
+    addSugerencias: addSugerencias,
+    addCard
 }

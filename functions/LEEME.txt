@@ -1,0 +1,6 @@
+Estos son los archivos finales despues de desarrollar todas las clases de: Generando Basic Cards. Deben situarse en la carpeta functions y son los siguientes:
+index.js - archivo principal
+DBVDialogLib.js - Librería
+package.json - (Archivo generado con las instalacions de node.js, en principio este no debería copiarse y solo usarlo como referencia de lo que tiene que estar instalado para que funcione todo bien)
+personajes.json - Este archivo es nuevo y contiene la descripción de los personajes del ejemplo
+Carpeta Imagenes - Todas las imágenes usadas hasta el momento.
