@@ -168,3 +168,63 @@ let req = {
 console.log(req.queryResult.action);
 console.log(req.queryResult.parameters);
 console.log(req.responseId);
+
+// Respuesta que hay que generar
+// ver la respuesta de Hola
+let respuesta = {
+    "responseId": "d2806f99-a2e3-4c89-a8d3-0540f6bd56e2",
+    "queryResult": {
+        "queryText": "hola",
+        "action": "input.welcome",
+        "parameters": {},
+        "allRequiredParamsPresent": true,
+        "fulfillmentText": "¡Hola!",
+        "fulfillmentMessages": [
+            {
+                "text": {
+                    "text": [
+                        "¡Hola!"
+                    ]
+                }
+            }
+        ],
+        "intent": {
+            "name": "projects/curso1-88e63/agent/intents/135c85c6-5500-4d29-94ce-0629ac2c5012",
+            "displayName": "Default Welcome Intent"
+        },
+        "intentDetectionConfidence": 1,
+        "languageCode": "es"
+    }
+};
+console.log(respuesta);
+respuesta.queryResult.fulfillmentText = "Buenos Dias";
+console.log("respuesta antes");
+
+console.log(respuesta);
+
+console.log(respuesta.queryResult.fulfillmentMessages[0]);
+respuesta.queryResult.fulfillmentMessages.push({
+    "platform": "ACTIONS_ON_GOOGLE",
+    "suggestions": {
+        "suggestions": [
+            {
+                "title": "Chiste"
+            },
+            {
+                "title": "Consejo"
+            },
+            {
+                "title": "Noticias"
+            },
+            {
+                "title": "Mi equipo"
+            }
+        ]
+    }
+});
+console.log("respuesta despues suggestion");
+console.log(respuesta);
+console.log(JSON.stringify(respuesta));
+
+  //console.log(respuesta.queryResult.fulfillmentMessages[1]);
+
