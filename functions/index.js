@@ -6,7 +6,7 @@ const express = require('express');
 const bodyParser = require('body-parser'); // necesario para leer HTTP Post y almacenar en req.body (middelware module)
 const path = require('path');
 
-const DBVDialogLib = require('./DBVDialogLib')
+const DBVDialogLib = require('./DBVDialogLib');
 
 // Variables Globales
 // Guia de uso de Express https://expressjs.com/es/guide/routing.html
@@ -24,31 +24,37 @@ server.get('/', (req, res) => {
 
 server.post("/curso", (req, res) => {
     let contexto = "nada";
-    let resultado = "petición incorrecta";
+    let resultado;
+    let textoEnviar = 'recibida petición post incorrecta';
+    let opciones = ["Chiste", "Consejo", "Noticias", "Mi Equipo"];
     try {
         contexto = req.body.queryResult.action;
-        resultado = `recibida petición de ${contexto}`;
+        textoEnviar = `recibida petición de ${contexto}`;
     } catch (error) {
         console.log("Error contexto vacio:" + error);
     }
-    res.json(resultado);
+
     if (req.body.queryResult.parameters) {
         console.log("parámetros:" + req.body.queryResult.parameters);
     } else {
         console.log("Sin parámetros");
 
     }
-
-
+    if (contexto === "input.welcome") {
+        textoEnviar = "Hola, soy el primer webhook";
+        resultado = DBVDialogLib.respuestaBasica(textoEnviar);
+    }
+    DBVDialogLib.addSugerencias(resultado, opciones);
+    res.json(resultado);
 });
 
 
-const local = true;
+const local = false;
 if (local) {
     server.listen((process.env.PORT || 8000), () => {
         console.log("Servidor funcionando...");
 
     })
 } else {
-    exports.curso1 = functions.https.onRequest(server);
+    exports.curso = functions.https.onRequest(server);
 }
