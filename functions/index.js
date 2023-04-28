@@ -10,8 +10,7 @@ const DBVDialogLib = require('./DBVDialogLib');
 
 // Variables Globales
 global.listaPersonajes = require("./personajes.json");
-global.imagenes = "https://us-central1-curso1-88e63.cloudfunctions.net/curso/imagenes/";
-
+global.imagenes = "https://us-central1-curso1-88e63.cloudfunctions.net/curso/imagenes/"
 // Guia de uso de Express https://expressjs.com/es/guide/routing.html
 const server = express();
 server.use(bodyParser.urlencoded({
@@ -29,7 +28,7 @@ server.post("/curso", (req, res) => {
   let contexto = "nada";
   let resultado;
   let textoEnviar = 'recibida petición post incorrecta';
-  let opciones = ["Chiste", "Consejo", "Noticias", "Mi Equipo"];
+  let opciones = DBVDialogLib.reducirAOcho(["Chiste", "Consejo", "Noticias", "Mi Equipo", "Personaje"]);
   try {
     contexto = req.body.queryResult.action;
     textoEnviar = `recibida petición de ${contexto}`;
@@ -43,47 +42,54 @@ server.post("/curso", (req, res) => {
     console.log("Sin parámetros");
 
   }
-  
-  if (contexto === "input.welcome") {  
-    /**********  input.welcome  *********/
+  if (contexto === "input.welcome") {
+    /*********** input.welcome  ***********/
     textoEnviar = "Hola, soy el primer webhook";
     resultado = DBVDialogLib.respuestaBasica(textoEnviar);
   } else if (contexto === "personaje") {
-    /**********  personaje  *********/
+    /*********** personaje  ***********/
     let personaje;
     try {
       personaje = req.body.queryResult.parameters.personaje;
     } catch (error) {
       console.log("error personaje no leido:" + error);
     }
-    if (typeof(personaje)!=='undefined') {
-      console.log("personaje:"+personaje);
+    if (personaje) {
       let arListaPersonajes = Object.keys(global.listaPersonajes).slice();
-      opciones = arListaPersonajes.slice(); // ponemos como sugerencia a los personajes
-      opciones.unshift("Menú"); // añade menú al inicio.
+      // Vamos a personalizar las opciones para que aparezcan como sugerencias otros personajes y el menú
+      opciones = arListaPersonajes.slice();
+      opciones.unshift("Menú");
+      // si ha llegado parametro personaje y está en la lista
       if (global.listaPersonajes[personaje]) {
         textoEnviar = global.listaPersonajes[personaje];
         let imagen = encodeURI(global.imagenes + personaje + ".jpg");
         let url = "https://www.google.com/search?q=" + personaje;
         resultado = DBVDialogLib.respuestaBasica(`Me encanta ${personaje}`);
         DBVDialogLib.addCard(resultado, personaje, textoEnviar, imagen, url);
-
-      } else { // si el elemento no está en la lista global
-        resultado = DBVDialogLib.respuestaBasica(`Lo siento todavía no he aprendido nada de ${personaje}. Seguiré estudiando.`);
+      } else {
+        // Si el presonaje recibido no está en la base de datos listaPersonajes
+        resultado = DBVDialogLib.respuestaBasica(`Lo siento, todavía no he aprendido nada de ${personaje}. Seguiré estudiando.`);
       }
-    }else { // Personaje vacio
-      resultado = DBVDialogLib.respuestaBasica(`No se ha recibido personaje 2`);
+    } else {
+      // Personaje vacio
+      resultado = DBVDialogLib.respuestaBasica("No conozco a ese personaje");
     }
-  } else if (contexto==="lista_personajes")  {
-    /**********  lista_personaje  *********/
+
+  } else if (contexto === "lista_personajes") {
+    /********** lista_personajes  **********/
     let arListaPersonajes = Object.keys(global.listaPersonajes).slice();
-      opciones = arListaPersonajes.slice(); // ponemos como sugerencia a los personajes
-      opciones.unshift("Menú"); // añade menú al inicio.
-      resultado=DBVDialogLib.respuestaBasica("Te muestro algunos personajes que conozco...");
-  } else { // Se recibe un action no reconocido
-    resultado = DBVDialogLib.respuestaBasica(`Todavía no he aprendido a gestionar: ${contexto}`);
+    // Vamos a personalizar las opciones para que aparezcan como sugerencias otros personajes y el menú
+    opciones = arListaPersonajes.slice();
+    opciones.unshift("Menú");
+    resultado = DBVDialogLib.respuestaBasica("Te muestro algunos personajes que conozco...");
+  } else if (contexto==="menu") {
+	  /********** menu  **********/
+    resultado=DBVDialogLib.respuestaBasica("Te muestro algunas cosas que se hacer:");
+  } else {
+    // Se recibe un action desconocido (contexto)
+    resultado = DBVDialogLib.respuestaBasica(`Todavía no he aprendido a gestionar:${contexto}`);
+
   }
-  console.log("resultado antes de addsugerencias" + JSON.stringify(resultado));
   DBVDialogLib.addSugerencias(resultado, opciones);
   res.json(resultado);
 });

@@ -1,4 +1,4 @@
-Estos son los archivos finales despues de desarrollar todas las clases de: Generando Basic Cards. Deben situarse en la carpeta functions y son los siguientes:
+Estos son los archivos con los que termina la clase Reducir sugerencias que incluye el código de las dos últimas clases Lista Personajes y Menú. Deben situarse en la carpeta functions y son los siguientes:
 index.js - archivo principal
 DBVDialogLib.js - Librería
 package.json - (Archivo generado con las instalacions de node.js, en principio este no debería copiarse y solo usarlo como referencia de lo que tiene que estar instalado para que funcione todo bien)
