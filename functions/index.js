@@ -27,6 +27,7 @@ server.get('/', (req, res) => {
 server.post("/curso", (req, res) => {
   let contexto = "nada";
   let resultado;
+  let respuestaEnviada = false;
   let textoEnviar = 'recibida petición post incorrecta';
   let opciones = DBVDialogLib.reducirAOcho(["Chiste", "Consejo", "Noticias", "Mi Equipo", "Personaje"]);
   try {
@@ -82,20 +83,105 @@ server.post("/curso", (req, res) => {
     opciones = arListaPersonajes.slice();
     opciones.unshift("Menú");
     resultado = DBVDialogLib.respuestaBasica("Te muestro algunos personajes que conozco...");
-  } else if (contexto==="menu") {
-	  /********** menu  **********/
-    resultado=DBVDialogLib.respuestaBasica("Te muestro algunas cosas que se hacer:");
-  } else {
-    // Se recibe un action desconocido (contexto)
-    resultado = DBVDialogLib.respuestaBasica(`Todavía no he aprendido a gestionar:${contexto}`);
+  } else if (contexto === "menu") {
+    /************** menu  ************/
+    resultado = DBVDialogLib.respuestaBasica("Te muestro algunas cosas que se hacer:");
+  } else if (contexto === "recomendar_ordenador") {
+    let tipopc;
+    let memoria;
+    let discoduro;
+    let marcapc;
+    try {
+      tipopc = req.body.queryResult.parameters.tipopc;
+      memoria = req.body.queryResult.parameters.memoria;
+      marcapc = req.body.queryResult.parameters.marcapc;
+      discoduro = req.body.queryResult.parameters.discoduro;
+    } catch (error) {
+      console.log("cargando variables:" + error);
+    }
+    if (!tipopc) {
+      textoEnviar = 'Que tipo de dispositivo te gustaría elegir:';
+      opciones = ["sobremesa", "portatiles"];
+      resultado = DBVDialogLib.respuestaBasica(textoEnviar);
+    } else if (!memoria) {
+      textoEnviar = 'Es necesario elegir el tamaño de la memoria:';
+      opciones = ["4 Gb", "8 Gb", "16 Gb", "32 Gb"];
+      resultado = DBVDialogLib.respuestaBasica(textoEnviar);
+    } else if (!discoduro) {
+      textoEnviar = 'Ahora veremos el almacenamiento en disco:';
+      opciones = ["1 Tb", "2 Tb", "4 Tb"];
+      resultado = DBVDialogLib.respuestaBasica(textoEnviar);
+    } else if (!marcapc) {
+      textoEnviar = "Vamos a ver que marca te gustaría consultar:";
+      opciones = ["hp", "lenovo", "msi", "acer", "dell"];
+      resultado = DBVDialogLib.respuestaBasica(textoEnviar);
+    } else {
+      // Se tienen los 4 parametros y se puede realizar la búsqueda del PC
+      resultado = DBVDialogLib.respuestaBasica("Te ayudaré a encontrar un ordenador con esas características");
+      let url = 'https://www.pccomponentes.com' + ((tipopc) ? "/" + tipopc : "") + ((discoduro) ? "/" + discoduro : "") + ((memoria) ? "/" + memoria : "") + ((marcapc) ? "/" + marcapc : "");
+      DBVDialogLib.addEnlace(resultado, `Ver recomendación`, url);
+      opciones = ["Menú"];
+    }
+  } else if (contexto === "aparcamientos_contar") {
+    respuestaEnviada = true;
+    const reqUrl = 'http://datosabiertos.malaga.eu/api/3/action/datastore_search_sql?sql=SELECT count (*) from "0dcf7abd-26b4-42c8-af19-4992f1ee60c6"';
+    DBVDialogLib.leerURLpromise(reqUrl).then((respuesta) => {
+      let resultado;
+      textoEnviar = respuesta.result.records[0].count + " aparcamientos";
+      console.log(("En Málaga hay " + textoEnviar));
+      resultado = DBVDialogLib.respuestaBasica(textoEnviar);
+      DBVDialogLib.addSugerencias(resultado, opciones);
+      res.json(resultado);
+      return true;
 
-  }
+    }).catch((error) => {
+      console.log("error capturado en promise:" + error);
+      res.json(DBVDialogLib.respuestaBasica("Lo siento. No puedo contactar con servidor externo"));
+
+    });
+  } else if (contexto === "aparcamientos_ocupacion") {
+    const aparcBuscado = req.body.queryResult.parameters.nombre;
+    console.log("aparcBuscado=" + aparcBuscado);
+
+    const reqUrl = encodeURI(`http://datosabiertos.malaga.eu/api/3/action/datastore_search_sql?sql=SELECT * from "0dcf7abd-26b4-42c8-af19-4992f1ee60c6" WHERE upper(nombre) LIKE upper('%${aparcBuscado}%')`);
+    console.log(reqUrl);
+    
+    respuestaEnviada = true;
+    DBVDialogLib.leerURLpromise(reqUrl).then((respuesta) => {
+      let resultado;
+      textoEnviar;
+      console.log("leerURLpromise:" + JSON.stringify(respuesta));
+      const aparcamiento = respuesta.result.records[0];
+      console.log("leerURLpromise-aparcamiento:" + aparcamiento);
+      if (aparcamiento.libres > 0) {
+        textoEnviar += `${aparcamiento.nombre} situado en ${aparcamiento.direccion} dispone de ${aparcamiento.capacidad} plazas y ahora tiene ${aparcamiento.libres} libres. Corre y no pierdas tu sitio`;
+      } else {
+        textoEnviar += `${aparcamiento.nombre} situado en ${aparcamiento.direccion} dispone de ${aparcamiento.capacidad} plazas y ahora está lleno. Espera un poquito o prueba con otro aparcamiento`;
+      }
+      console.log("Resultado aparcamientos: " + textoEnviar);
+      resultado=DBVDialogLib.respuestaBasica(textoEnviar);
+      DBVDialogLib.addSugerencias(resultado,opciones);
+      res.json(resultado);
+      return true;
+  }).catch((error)=> {
+    console.log("error capturado en promise:"+error);
+    res.json(DBVDialogLib.respuestaBasica("Lo siento. No encuentro ese aparcamiento"));
+    
+  });
+
+  } else {
+  // Se recibe un action desconocido (contexto)
+  resultado = DBVDialogLib.respuestaBasica(`Todavía no he aprendido a gestionar:${contexto}`);
+
+}
+if (!respuestaEnviada) {
   DBVDialogLib.addSugerencias(resultado, opciones);
   res.json(resultado);
+}
 });
 
 
-const local = false;
+const local = true;
 if (local) {
   server.listen((process.env.PORT || 8000), () => {
     console.log("Servidor funcionando...");
