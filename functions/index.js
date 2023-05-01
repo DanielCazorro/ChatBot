@@ -11,6 +11,7 @@ const DBVDialogLib = require('./DBVDialogLib');
 // Variables Globales
 global.listaPersonajes = require("./personajes.json");
 global.imagenes = "https://us-central1-curso1-88e63.cloudfunctions.net/curso/imagenes/"
+global.ponentes = require("./ponentes.json");
 // Guia de uso de Express https://expressjs.com/es/guide/routing.html
 const server = express();
 server.use(bodyParser.urlencoded({
@@ -29,7 +30,7 @@ server.post("/curso", (req, res) => {
   let resultado;
   let respuestaEnviada = false;
   let textoEnviar = 'recibida petición post incorrecta';
-  let opciones = DBVDialogLib.reducirAOcho(["Chiste", "Consejo", "Noticias", "Mi Equipo", "Personaje"]);
+  let opciones = DBVDialogLib.reducirAOcho(["Chiste", "Consejo", "Noticias", "Horario", "Mi Equipo", "Personaje","Noticias","Ponente","Ocupación Aparcamiento"]);
   try {
     contexto = req.body.queryResult.action;
     textoEnviar = `recibida petición de ${contexto}`;
@@ -168,7 +169,28 @@ server.post("/curso", (req, res) => {
     res.json(DBVDialogLib.respuestaBasica("Lo siento. No encuentro ese aparcamiento"));
     
   });
+  } else if (contexto==="ponente") {
+    try {
+      let ponente="";
+      ponente=req.body.queryResult.parameters.ponente;
+      textoEnviar=ponente+" es " +global.ponentes[ponente].Cargo+ " en "+ global.ponentes[ponente].Institucion;
+      let imagen = global.ponentes[ponente].Imagen;
+      let url = global.ponentes[ponente].url;
+      resultado = DBVDialogLib.respuestaBasica(textoEnviar);
+      DBVDialogLib.addCard(resultado, ponente, textoEnviar, imagen, url);
 
+      let arListaPonentes = Object.keys(global.ponentes).slice();
+      // Vamos a personalizar las opciones para que aparezcan como sugerencias otros ponentes y el menú
+      opciones = opciones = DBVDialogLib.reducirAOcho(arListaPonentes.slice());
+      opciones.unshift("Menú");
+
+
+
+    } catch(error) {
+      textoEnviar="No conozco ese ponente";
+      resultado = DBVDialogLib.respuestaBasica(textoEnviar);
+    }
+  
   } else {
   // Se recibe un action desconocido (contexto)
   resultado = DBVDialogLib.respuestaBasica(`Todavía no he aprendido a gestionar:${contexto}`);
@@ -181,7 +203,7 @@ if (!respuestaEnviada) {
 });
 
 
-const local = true;
+const local = false;
 if (local) {
   server.listen((process.env.PORT || 8000), () => {
     console.log("Servidor funcionando...");
